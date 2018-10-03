@@ -1,6 +1,10 @@
 # MtgSmsPricer
 
-<<overview goes here>>
+MtgSmsPricer will be a utility to help Vanderbilt MTG club members price their cards for trading. Most users seem to consult online sources like TCGPlayer already, so it makes sense to streamline the process for accessing this information. Furthermore, users seem to place high value on the precise balance of card value in a trade, so it will be important for users to be able to easily derive that particular piece of information from the results.  
+	
+The application aims to fulfill this need through an SMS interface. Users will send the MtgSmsPricer phone number a card name or list of card names and receive a price or price sum in response. Furthermore, if the user sends two lists of cards delimited by a specific token like an '=?', then the application will respond with two price lists and the calculated difference between these two lists.  
+
+The leverage of the SMS platform is a key component of the application because it means users will be able to consult pricing guides without the need for the internet. This will make it easier to trade when mobile data is weak or users wish to avoid using mobile data as much as possible.  
 
 # Questions:
 	1. How do you typically determine the value of cards you trade with or trade for?
