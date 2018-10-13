@@ -1,4 +1,4 @@
-(defproject asgn1 "0.1.0-SNAPSHOT"
+(defproject mtgsmspricer "0.1.0-SNAPSHOT"
             :description "CS4278"
             :url "http://magnum.io"
             :license {:name "Eclipse Public License"
@@ -61,14 +61,14 @@
 
                              :env {:dev true}}}
 
-            :main asgnx.cli 
+            :main mtgsmspricer.cli
 
             :cljsbuild
             {:builds {:lambda
                       {:source-paths ["src"]
                        :compiler {:output-to     "target/cljsbuild/lambda.js"
                                   :output-dir    "target/cljsbuild"
-                                  :main          "asgnx.lambda"
+                                  :main          "mtgsmspricer.lambda"
                                   :source-map    true
                                   :target        :nodejs
                                   :language-in   :ecmascript5
