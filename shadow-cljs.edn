@@ -14,5 +14,5 @@
  ;
  :builds
  {:app {:target :node-script
-        :main      asgnx.lambda/node-repl
+        :main      mtgsmspricer.lambda/node-repl
         :output-to "out/demo-script/script.js"}}}

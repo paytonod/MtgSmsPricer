@@ -1,6 +1,6 @@
-(ns asgnx.cli
-  (:require [asgnx.core :as core]
-            [asgnx.kvstore :as kvstore]
+(ns mtgsmspricer.cli
+  (:require [mtgsmspricer.core :as core]
+            [mtgsmspricer.kvstore :as kvstore]
             [clojure.core.async :refer [<!! go]]))
 
 (defn run [handler quit? recv send]

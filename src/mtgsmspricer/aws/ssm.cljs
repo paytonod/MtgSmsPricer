@@ -1,11 +1,11 @@
-(ns asgnx.aws.ssm
+(ns mtgsmspricer.aws.ssm
   (:require [clojure.core.async :as async :refer [<! >! chan]]
             [clojure.walk :as walk]
             [cljs.nodejs :as nodejs]
             [clojure.string :as string]
             [cognitect.transit :as t])
   (:require-macros [cljs.core.async :refer [go]]
-                   [asgnx.aws.core :refer [aws]]))
+                   [mtgsmspricer.aws.core :refer [aws]]))
 
 (def AWS (nodejs/require "aws-sdk"))
 (.update (aget AWS "config") (clj->js {:region "us-east-1"}))

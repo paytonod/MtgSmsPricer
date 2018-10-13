@@ -1,12 +1,12 @@
-(ns asgnx.aws.s3
-  (:require [asgnx.kvstore :as kvstore :refer [put! get! list! remove! KeyStore]]
+(ns mtgsmspricer.aws.s3
+  (:require [mtgsmspricer.kvstore :as kvstore :refer [put! get! list! remove! KeyStore]]
             [clojure.core.async :as async :refer [<! >! chan]]
             [clojure.walk :as walk]
             [cljs.nodejs :as nodejs]
             [clojure.string :as string]
             [cognitect.transit :as t])
   (:require-macros [cljs.core.async :refer [go]]
-                   [asgnx.aws.core :refer [aws]]))
+                   [mtgsmspricer.aws.core :refer [aws]]))
 
 (def S3 (nodejs/require "aws-sdk/clients/s3"))
 (def s3-client (new S3))

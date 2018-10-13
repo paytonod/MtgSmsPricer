@@ -1,4 +1,4 @@
-(ns asgnx.twilio.core
+(ns mtgsmspricer.twilio.core
   (:require [clojure.core.async :as async :refer [<! >! chan go]]
             [clojure.walk :as walk]
             [cljs.nodejs :as nodejs]

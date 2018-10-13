@@ -1,10 +1,10 @@
-(ns asgnx.kvstore-test
+(ns mtgsmspricer.kvstore-test
   (:require [clojure.test :refer :all]
             [clojure.core.async :refer [<!!]]
             [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as stest]
             [clojure.test.check.generators :as gen]
-            [asgnx.kvstore :refer :all]))
+            [mtgsmspricer.kvstore :refer :all]))
 
 
 (deftest state-put-test

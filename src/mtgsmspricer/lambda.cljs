@@ -1,9 +1,9 @@
-(ns asgnx.lambda
+(ns mtgsmspricer.lambda
   "
     Provides the entry-point from AWS Lambda into the SMS application.
 
     This code is written in Clojurescript (hence the .cljs extension) and
-    is designed to run on NodeJS. The asgnx.aws and asgnx.twilio namespaces
+    is designed to run on NodeJS. The mtgsmspricer.aws and mtgsmspricer.twilio namespaces
     also are written in Clojurescript and use NodeJS libraries.
 
     The SMS Api:
@@ -25,11 +25,11 @@
     office <day> ;; returns the office hours for the given day of the week
                     (e.g., office tuesday)
   "
-  (:require [asgnx.core :as core]
-            [asgnx.aws.s3 :as s3]
-            [asgnx.aws.ssm :as ssm]
-            [asgnx.kvstore :as kvstore]
-            [asgnx.twilio.core :as twilio]
+  (:require [mtgsmspricer.core :as core]
+            [mtgsmspricer.aws.s3 :as s3]
+            [mtgsmspricer.aws.ssm :as ssm]
+            [mtgsmspricer.kvstore :as kvstore]
+            [mtgsmspricer.twilio.core :as twilio]
             [clojure.string :as string]
             [clojure.core.async :refer [go <! chan]]
             [cljs-lambda.context :as ctx]
@@ -75,7 +75,7 @@
                   :credentials-mgr     ssm/get-secrets!
                   :effect-handlers     (merge kvstore/action-handlers
                                               twilio/action-handlers)
-                  :state-mgr           (s3/s3-keystore "cs4278-asgnx-state-paytonodaniels")}
+                  :state-mgr           (s3/s3-keystore "mtgsmspricer-state")}
           resp   (<! (core/handle-message system from msg))]
 
         (println "Response: " resp)

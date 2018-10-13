@@ -1,7 +1,7 @@
-(ns asgnx.core
+(ns mtgsmspricer.core
   (:require [clojure.string :as string]
             [clojure.core.async :as async :refer [go chan <! >!]]
-            [asgnx.kvstore :as kvstore
+            [mtgsmspricer.kvstore :as kvstore
              :refer [put! get! list! remove!]]))
 
 
@@ -35,7 +35,7 @@
 ;;
 ;; Example: (cmd "foo bar") => "foo"
 ;;
-;; See the cmd-test in test/asgnx/core_test.clj for the
+;; See the cmd-test in test/mtgsmspricer/core_test.clj for the
 ;; complete specification.
 ;;
 (defn cmd [msg]
@@ -51,7 +51,7 @@
 ;;
 ;; Example: (args "foo bar baz") => ("bar" "baz")
 ;;
-;; See the args-test in test/asgnx/core_test.clj for the
+;; See the args-test in test/mtgsmspricer/core_test.clj for the
 ;; complete specification.
 ;;
 (defn args [msg]
@@ -68,7 +68,7 @@
 ;;
 ;; (parsed-msg "foo bar baz") => {:cmd "foo" :args ["bar" "baz"]}
 ;;
-;; See the parsed-msg-test in test/asgnx/core_test.clj for the
+;; See the parsed-msg-test in test/mtgsmspricer/core_test.clj for the
 ;; complete specification.
 ;;
 (defn parsed-msg [msg]
@@ -84,7 +84,7 @@
 ;;
 ;; (welcome {:cmd "welcome" :args ["foo"]}) => "Welcome foo"
 ;;
-;; See the welcome-test in test/asgnx/core_test.clj for the
+;; See the welcome-test in test/mtgsmspricer/core_test.clj for the
 ;; complete specification.
 ;;
 (defn welcome [pmsg]
@@ -97,7 +97,7 @@
 ;; @Todo: Fill in this function to return the CS 4278 home page.
 ;; Use the `cs4278-brightspace` def to produce the output.
 ;;
-;; See the homepage-test in test/asgnx/core_test.clj for the
+;; See the homepage-test in test/mtgsmspricer/core_test.clj for the
 ;; complete specification.
 ;;
 (defn homepage [_]
@@ -112,7 +112,7 @@
 ;;
 ;; Example: (format-hour 14) => "2pm"
 ;;
-;; See the format-hour-test in test/asgnx/core_test.clj for the
+;; See the format-hour-test in test/mtgsmspricer/core_test.clj for the
 ;; complete specification.
 ;;
 (defn format-hour [h]
@@ -138,7 +138,7 @@
 ;;
 ;; You should use your format-hour function to implement this.
 ;;
-;; See the formatted-hours-test in test/asgnx/core_test.clj for the
+;; See the formatted-hours-test in test/mtgsmspricer/core_test.clj for the
 ;; complete specification.
 ;;
 (defn formatted-hours [hours]
@@ -160,7 +160,7 @@
 ;;
 ;; You should use your formatted-hours function to implement this.
 ;;
-;; See the office-hours-for-day-test in test/asgnx/core_test.clj for the
+;; See the office-hours-for-day-test in test/mtgsmspricer/core_test.clj for the
 ;; complete specification.
 ;;
 (defn office-hours [{:keys [args cmd]}]
@@ -531,7 +531,7 @@
 ;; corresponding key for the command, you should return the function
 ;; mapped to the key "default".
 ;;
-;; See the create-router-test in test/asgnx/core_test.clj for the
+;; See the create-router-test in test/mtgsmspricer/core_test.clj for the
 ;; complete specification.
 ;;
 (defn create-router [routes]

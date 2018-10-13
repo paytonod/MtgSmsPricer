@@ -1,9 +1,9 @@
-(ns asgnx.kvstore
+(ns mtgsmspricer.kvstore
   "Provides a protocol for working with key/value stores.
 
   Different key/value (kv) store implementations can be hidden behind this
   protocol. The default implementation below uses a Clojure atom to provide
-  management of a kv store. The asgnx.aws.s3 namespace provides an implementation
+  management of a kv store. The mtgsmspricer.aws.s3 namespace provides an implementation
   backed by S3.
 
   DO NOT use these for real applications unless you completely understand the
@@ -30,7 +30,7 @@
 ;; (state-put {} [:a :b :c] 1) => {:a {:b {:c 1}}})
 ;; (state-put {:a {:b 2}} [:a :b] 3) => {:a {:b 3})
 ;;
-;; See the tests in asgnx.kvstore-test for a complete spec.
+;; See the tests in mtgsmspricer.kvstore-test for a complete spec.
 ;;
 (defn state-put [m ks v]
   (assoc-in m ks v))
@@ -48,7 +48,7 @@
 ;; (state-remove {:a {:b 2}} [:a]) => {})
 ;; (state-remove {:a {:b 2 :d 3}} [:a :d]) => {:a {:b 2}})
 ;;
-;; See the tests in asgnx.kvstore-test for a complete spec.
+;; See the tests in mtgsmspricer.kvstore-test for a complete spec.
 ;; @FoundCode
 ;; @Source: https://github.com/clojure/core.incubator/blob/master/src/main/clojure/clojure/core/incubator.clj#L63
 
@@ -81,7 +81,7 @@
 ;; (state-get {:a {:b 2 :d 3}} [:a :d]) => 3
 ;; (state-get {:a {:b 2 :d 3}} [:a :f] 100) => 100
 ;;
-;; See the tests in asgnx.kvstore-test for a complete spec.
+;; See the tests in mtgsmspricer.kvstore-test for a complete spec.
 ;;
 (defn state-get [m ks & d] ;; Change the signature!
   (get-in m ks d))
@@ -99,7 +99,7 @@
 ;; (state-keys {:a {:b 2}} [:a]) => [:b])
 ;; (state-keys {:a {:b 2 :d 3}} [:a]) => [:b :d]
 ;;
-;; See the tests in asgnx.kvstore-test for a complete spec.
+;; See the tests in mtgsmspricer.kvstore-test for a complete spec.
 ;;
 (defn state-keys [m ks]
   (keys (state-get m ks)))

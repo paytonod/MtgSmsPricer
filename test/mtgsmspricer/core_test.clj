@@ -1,11 +1,11 @@
-(ns asgnx.core-test
+(ns mtgsmspricer.core-test
   (:require [clojure.test :refer :all]
             [clojure.core.async :refer [<!!]]
             [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as stest]
             [clojure.test.check.generators :as gen]
-            [asgnx.core :refer :all]
-            [asgnx.kvstore :as kvstore :refer [put! get!]]))
+            [mtgsmspricer.core :refer :all]
+            [mtgsmspricer.kvstore :as kvstore :refer [put! get!]]))
 
 
 

@@ -1,4 +1,4 @@
-(ns asgnx.aws.core
+(ns mtgsmspricer.aws.core
   (:require [clojure.core.async :as async :refer [chan >! <! put! go]]
             [clojure.walk :as walk]))
 
