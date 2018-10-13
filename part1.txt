@@ -1,0 +1,6 @@
+Project Repo: https://github.com/paytonod/MtgSmsPricer
+
+Interviewed:
+Jason Chow, Vanderbilt graduate student and MTG club member, jason.k.chow@vanderbilt.edu
+Dylan Kistler, Vanderbilt undergraduate student and MTG club member, dylan.kistler@vanderbilt.edu
+Peyton Brown, Vanderbilt undergraduate student and MTG club member, peyton.f.brown@vanderbilt.edu
