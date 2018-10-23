@@ -10,6 +10,7 @@
                            [cljsjs/aws-sdk-js "2.94.0-0"]
                            [clj-http "3.9.1"]
                            [cljs-http "0.1.45"]
+                           [cljs-ajax "0.7.5"]
                            [io.nervous/cljs-lambda "0.3.5"
                             :exclusions [org.clojure/tools.reader
                                          org.clojure/clojurescript
@@ -49,6 +50,7 @@
                                             [cheshire "5.8.0"]
                                             [clj-http "3.9.0"]
                                             [cljs-http "0.1.45"]
+                                            [cljs-ajax "0.7.5"]
                                             [clj-jgit "0.8.10"]
                                             [com.cognitect/transit-clj "0.8.309"]
                                             [me.raynes/fs "1.4.6"]

@@ -5,6 +5,7 @@
             [clojure.spec.test.alpha :as stest]
             [clojure.test.check.generators :as gen]
             [mtgsmspricer.core :refer :all]
+            [clj-http.client :as client]
             [mtgsmspricer.kvstore :as kvstore :refer [put! get!]]))
 
 
@@ -140,41 +141,60 @@
 (def send-action-handlers
   {:send action-send})
 
+(defn fmt [msg price]
+  (if (neg? price)
+    (str msg (format "%.2f" (- price)))
+    (str msg (format "%.2f" price))))
+
+(def scp
+  (read-string (:usd (parse-response (client/get "https://api.scryfall.com/cards/named" {:query-params {:fuzzy "storm crow" :set "6ed"}})))))
+
+(def shp
+  (read-string (:usd (parse-response (client/get "https://api.scryfall.com/cards/named" {:query-params {:fuzzy "shock" :set "10e"}})))))
+
 (deftest price-test
   (testing "the price command"
-    (is (= "Error: unknown card name" (second (price-fetch {:cmd "price", :args '(), :user-id nil}))))
-    (is (= "Error: unknown card name" (second (price-fetch {:cmd "price", :args '("not" "a" "card" "name"), :user-id nil}))))
-    (is (= "Shock (10E): $0.13" (second (price-fetch {:cmd "price", :args '("shock"), :user-id nil}))))
-    (is (= "Storm Crow (6ED): $0.19" (second (price-fetch {:cmd "price", :args '("storm" "crow"), :user-id nil}))))))
+    (let [test1 (fmt "Shock (10E): $" shp)
+          test2 (fmt "Storm Crow (6ED): $" scp)]
+      (is (= "Error: unknown card name" (second (price-fetch {:cmd "price", :args '(), :user-id nil}))))
+      (is (= "Error: unknown card name" (second (price-fetch {:cmd "price", :args '("not" "a" "card" "name"), :user-id nil}))))
+      (is (= test1 (second (price-fetch {:cmd "price", :args '("shock"), :user-id nil}))))
+      (is (= test2 (second (price-fetch {:cmd "price", :args '("storm" "crow"), :user-id nil})))))))
 
 (deftest sum-test
   (testing "the sum command"
-    (is (= "Error: invalid list syntax" (second (sum-fetch {:cmd "sum", :args '(), :user-id nil}))))
-    (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("not" "a" "card" "name"), :user-id nil}))))
-    (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("1"), :user-id nil}))))
-    (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("1" "1"), :user-id nil}))))
-    (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("1" "not" "a" "card" "name"), :user-id nil}))))
-    (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("not" "a" "card" "name"), :user-id nil}))))
-    (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("storm" "crow"), :user-id nil}))))
-    (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("shock"), :user-id nil}))))
-    (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("1" "storm" "crow" "2"), :user-id nil}))))
-    (is (= "Total price: $0.26" (second (sum-fetch {:cmd "sum", :args '("2" "shock"), :user-id nil}))))
-    (is (= "Total price: $0.38" (second (sum-fetch {:cmd "sum", :args '("2" "storm" "crow"), :user-id nil}))))
-    (is (= "Total price: $0.64" (second (sum-fetch {:cmd "sum", :args '("2" "shock" "2" "storm" "crow"), :user-id nil}))))
-    (is (= "Total price: $3.20" (second (sum-fetch {:cmd "sum", :args '("10" "shock" "10" "storm" "crow"), :user-id nil}))))))
+    (let [test1 (fmt "Total price: $" (* 2 shp))
+          test2 (fmt "Total price: $" (* 2 scp))
+          test3 (fmt "Total price: $" (+ (* 2 shp) (* 2 scp)))
+          test4 (fmt "Total price: $" (+ (* 10 shp) (* 10 scp)))]
+      (is (= "Error: invalid list syntax" (second (sum-fetch {:cmd "sum", :args '(), :user-id nil}))))
+      (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("not" "a" "card" "name"), :user-id nil}))))
+      (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("1"), :user-id nil}))))
+      (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("1" "1"), :user-id nil}))))
+      (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("1" "not" "a" "card" "name"), :user-id nil}))))
+      (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("not" "a" "card" "name"), :user-id nil}))))
+      (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("storm" "crow"), :user-id nil}))))
+      (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("shock"), :user-id nil}))))
+      (is (= "Error: invalid list syntax or card name" (second (sum-fetch {:cmd "sum", :args '("1" "storm" "crow" "2"), :user-id nil}))))
+      (is (= test1 (second (sum-fetch {:cmd "sum", :args '("2" "shock"), :user-id nil}))))
+      (is (= test2 (second (sum-fetch {:cmd "sum", :args '("2" "storm" "crow"), :user-id nil}))))
+      (is (= test3 (second (sum-fetch {:cmd "sum", :args '("2" "shock" "2" "storm" "crow"), :user-id nil}))))
+      (is (= test4 (second (sum-fetch {:cmd "sum", :args '("10" "shock" "10" "storm" "crow"), :user-id nil})))))))
 
 
 (deftest diff-test
   (testing "the diff command"
-    (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '(), :user-id nil}))))
-    (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '("1"), :user-id nil}))))
-    (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '("storm" "crow"), :user-id nil}))))
-    (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '("1" "storm" "crow"), :user-id nil}))))
-    (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "2" "shock"), :user-id nil}))))
-    (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "&"), :user-id nil}))))
-    (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "&" "2" "shock" "&" "2" "ponder"), :user-id nil}))))
-    (is (= "Error: invalid list syntax or card name" (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "&" "2"), :user-id nil}))))
-    (is (= "Error: invalid list syntax or card name" (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "&" "2" "not" "a" "card"), :user-id nil}))))
-    (is (= "Price difference: $0.00" (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "&" "2" "storm" "crow"), :user-id nil}))))
-    (is (= "Price difference: $0.12" (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "&" "2" "shock"), :user-id nil}))))
-    (is (= "Price difference: -$0.12" (second (diff-fetch {:cmd "diff", :args '("2" "shock" "&" "2" "storm" "crow"), :user-id nil}))))))
+    (let [test1 (fmt "Price difference: $" (- (* 2 scp) (* 2 shp)))
+          test2 (fmt "Price difference: -$" (- (* 2 shp) (* 2 scp)))]
+      (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '(), :user-id nil}))))
+      (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '("1"), :user-id nil}))))
+      (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '("storm" "crow"), :user-id nil}))))
+      (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '("1" "storm" "crow"), :user-id nil}))))
+      (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "2" "shock"), :user-id nil}))))
+      (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "&"), :user-id nil}))))
+      (is (= "Error: invalid diff syntax" (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "&" "2" "shock" "&" "2" "ponder"), :user-id nil}))))
+      (is (= "Error: invalid list syntax or card name" (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "&" "2"), :user-id nil}))))
+      (is (= "Error: invalid list syntax or card name" (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "&" "2" "not" "a" "card"), :user-id nil}))))
+      (is (= "Price difference: $0.00" (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "&" "2" "storm" "crow"), :user-id nil}))))
+      (is (= test1 (second (diff-fetch {:cmd "diff", :args '("2" "storm" "crow" "&" "2" "shock"), :user-id nil}))))
+      (is (= test2 (second (diff-fetch {:cmd "diff", :args '("2" "shock" "&" "2" "storm" "crow"), :user-id nil})))))))

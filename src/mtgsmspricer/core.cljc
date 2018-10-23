@@ -2,7 +2,7 @@
   (:require [clojure.string :as string]
             [clojure.core.async :as async :refer [go chan <! >!]]
             #?(:clj [clj-http.client :as client]
-               :cljs [cljs-http.client :as jsclient])
+                :cljs [cljs-http.client :as jsclient])
             [clojure.data.json :as json]
             [mtgsmspricer.kvstore :as kvstore
              :refer [put! get! list! remove!]]))
@@ -141,9 +141,8 @@
 (defn http-wrap [uri params]
   #?(:clj (client/get uri params)
      :cljs (go
-            (let [response (<! (jsclient/get uri params))]
-              response))))
-
+            (let [response (<! (jsclient/get uri params))])
+            response)))
 
 ;; set-traverse -- recursively traverses a given list of
 ;; card printings in JSON format and finds the first one that
@@ -386,7 +385,7 @@
 ;; Don't edit!
 (defn process-actions [system actions]
   (go
-    (println "  Processing actions:" actions)
+    ;; (println "  Processing actions:" actions)
     (let [results (atom [])]
       (doseq [action actions]
         (let [result (<! (invoke system action))]
@@ -418,19 +417,19 @@
   "
   [{:keys [state-mgr] :as system} src msg]
   (go
-    (println "=========================================")
-    (println "  Processing:\"" msg "\" from" src)
+    ;; (println "=========================================")
+    ;; (println "  Processing:\"" msg "\" from" src)
     (let [rtr    (create-router routes)
-          _      (println "  Router:" rtr)
+          ;; _      (println "  Router:" rtr)
           pmsg   (assoc (parsed-msg msg) :user-id src)
-          _      (println "  Parsed msg:" pmsg)
+          ;; _      (println "  Parsed msg:" pmsg)
           state  (<! (read-state state-mgr pmsg))
-          _      (println "  Read state:" state)
+          ;; _      (println "  Read state:" state)
           hdlr   (rtr pmsg)
-          _      (println "  Hdlr:" hdlr)
+          ;; _      (println "  Hdlr:" hdlr)
           [as o] (hdlr pmsg)
-          _      (println "  Hdlr result:" [as o])
-          arslt  (<! (process-actions system as))
-          _      (println "  Action results:" arslt)]
-      (println "=========================================")
+          ;; _      (println "  Hdlr result:" [as o])
+          arslt  (<! (process-actions system as))]
+          ;; _      (println "  Action results:" arslt)]
+      ;;(println "=========================================")
       o)))
