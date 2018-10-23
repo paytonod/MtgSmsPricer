@@ -2,7 +2,7 @@
 
 MtgSmsPricer will be a utility to help Vanderbilt MTG club members price their Magic: the Gathering cards for trading. Most users seem to consult online sources like TCGPlayer already, so it makes sense to streamline the process for accessing this information. Furthermore, users seem to place high value on the precise balance of card value in a trade, so it will be important for users to be able to easily derive that particular piece of information from the results.  
 
-The application aims to fulfill this need through an SMS interface. Users will send the MtgSmsPricer phone number a card name or list of card names and receive a price or price sum in response. Furthermore, if the user sends two lists of cards delimited by a specific token like an '=?', then the application will respond with two price lists and the calculated difference between these two lists.  
+The application aims to fulfill this need through an SMS interface. Users will send the MtgSmsPricer phone number a card name or list of card names and receive a price or price sum in response. Furthermore, if the user sends two lists of cards delimited by a specific token like an '&', then the application will respond with two price lists and the calculated difference between these two lists.  
 
 The leverage of the SMS platform is a key component of the application because it means users will be able to consult pricing guides without the need for the internet. This will make it easier to trade when mobile data is weak or users wish to avoid using mobile data as much as possible.  
 
@@ -120,3 +120,16 @@ In order to implement testing, I will implemented automated tests similar to the
 I mitigated the risk of building an inappropriate solution by directly consulting users and basing the features of the product off of the users' needs. This user-centric approach helps ensure that the correct product is being created. I envisioned the application based off of user feedback rather than assuming their needs and building a product to address perceived needs. I also mitigated the risk of the product failing to work by keeping its usage and features simple and straightforward. With less frills and more functionality, the product is less likely to suffer failure in functionality.
 
 Once I have reviewed the retailer API and laid out a concrete implementation plan, I will set goals for completing the assignment on time. At certain checkpoints, I will ensure that certain aspects are complete. If not, I will take this into account and adjust my plan accordingly to finish the assignment on time.
+
+# Guide for Usage
+
+The commands currently available for usage are:
+
+* help [optional: command name] -- this presents the user with documentation.
+
+* price [card name] -- this presents the user with the price of the given card.
+
+* sum [list of card names], where [list of card names] is of the format "X card1 Y card2 Z card3 ..." where X, Y, and Z are the quantities of card1, card2, and card3 respectively. Presents the user with the sum of the price of the quantity of the cards listed.
+
+* diff [list of card names] & [list of card names], where [list of card names] is of the format "X card1 Y card2 Z card3 ..." where X, Y, and Z are the quantities of card1, card2, and card3 respectively. Presents the user with the difference in price between the two lists of cards.
+
