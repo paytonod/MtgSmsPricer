@@ -1,172 +1,57 @@
 (ns mtgsmspricer.core
   (:require [clojure.string :as string]
             [clojure.core.async :as async :refer [go chan <! >!]]
+            #?(:clj [clj-http.client :as client]
+               :cljs [cljs-http.client :as jsclient])
+            [clojure.data.json :as json]
             [mtgsmspricer.kvstore :as kvstore
              :refer [put! get! list! remove!]]))
 
-
-;; Do not edit!
-;; A def for the course home page URL.
-(def cs4278-brightspace "https://brightspace.vanderbilt.edu/d2l/home/85892")
-
-
-;; Do not edit!
-;; A map specifying the instructor's office hours that is keyed by day of the week.
-(def instructor-hours {"tuesday"  {:start    8
-                                   :end      10
-                                   :location "the chairs outside of the Wondry"}
-
-                       "thursday" {:start    8
-                                   :end      10
-                                   :location "the chairs outside of the Wondry"}})
-
-
-;; This is a helper function that you might want to use to implement
-;; `cmd` and `args`.
+;; words -- a helper function that splits a string into a list
+;; delimited by spaces
 (defn words [msg]
   (if msg
       (string/split msg #" ")
       []))
 
-;; Asgn 1.
-;;
-;; @Todo: Fill in this function to return the first word in a text
-;; message.
-;;
-;; Example: (cmd "foo bar") => "foo"
-;;
-;; See the cmd-test in test/mtgsmspricer/core_test.clj for the
-;; complete specification.
-;;
+;; cmd - returns the first word in a text message.
 (defn cmd [msg]
   (first
     (words msg)))
 
 
 
-;; Asgn 1.
-;;
-;; @Todo: Fill in this function to return the list of words following
+;; args -- returns the list of words following
 ;; the command in a text message.
-;;
-;; Example: (args "foo bar baz") => ("bar" "baz")
-;;
-;; See the args-test in test/mtgsmspricer/core_test.clj for the
-;; complete specification.
-;;
 (defn args [msg]
   (rest
     (words msg)))
 
 
-;; Asgn 1.
-;;
-;; @Todo: Fill in this function to return a map with keys for the
+;; parsed-msg -- returns a map with keys for the
 ;; :cmd and :args parsed from the msg.
-;;
-;; Example:
-;;
-;; (parsed-msg "foo bar baz") => {:cmd "foo" :args ["bar" "baz"]}
-;;
-;; See the parsed-msg-test in test/mtgsmspricer/core_test.clj for the
-;; complete specification.
-;;
 (defn parsed-msg [msg]
   (zipmap [:cmd, :args]
     (list (cmd msg) (args msg))))
 
-;; Asgn 1.
-;;
-;; @Todo: Fill in this function to prefix the first of the args
-;; in a parsed message with "Welcome " and return the result.
-;;
-;; Example:
-;;
-;; (welcome {:cmd "welcome" :args ["foo"]}) => "Welcome foo"
-;;
-;; See the welcome-test in test/mtgsmspricer/core_test.clj for the
-;; complete specification.
-;;
-(defn welcome [pmsg]
-  (str "Welcome "
-    (first
-      (get pmsg :args))))
+;; help -- provides info about available commands and their proper
+;; usage
+(defn help [& pmsg]
+  (list
+    []
+    (let [arg (first (:args (first pmsg)))]
+      (cond
+        (= arg "price") "Syntax: \"price [card name]\", where [card name] is the name of any card (or a close approximation). Returns the price of the first available printing of the card."
+        (= arg "sum") "Syntax: \"sum [list of card names]\", where [list of card names] is a list of card names in the format \"X card1 Y card2 Z card3 ...\" where X, Y, and Z are the quantities of card1, card2, and card3 respectively. Returns the sum of the prices of all cards in the list."
+        (= arg "diff") "Syntax: \"diff [list of card names] & [list of card names]\", where [list of card names] is a list of card names in the format \"X card1 Y card2 Z card3 ...\" where X, Y, and Z, are the quantities of card1, card2, and card2 respectively. Returns the difference between the sum of the prices of the first list and the sum of the prices of the second list."
+        :else "Potential commands are:
 
-;; Asgn 1.
-;;
-;; @Todo: Fill in this function to return the CS 4278 home page.
-;; Use the `cs4278-brightspace` def to produce the output.
-;;
-;; See the homepage-test in test/mtgsmspricer/core_test.clj for the
-;; complete specification.
-;;
-(defn homepage [_]
-  (str cs4278-brightspace))
+        * \"price [card name]\"
+        * \"sum [list of card names]\"
+        * \"diff [list of card names] & [list of card names]\"
 
+        For detailed command info, enter \"help [command name]\""))))
 
-
-;; Asgn 1.
-;;
-;; @Todo: Fill in this function to convert from 0-23hr format
-;; to AM/PM format.
-;;
-;; Example: (format-hour 14) => "2pm"
-;;
-;; See the format-hour-test in test/mtgsmspricer/core_test.clj for the
-;; complete specification.
-;;
-(defn format-hour [h]
-  ;; if h is 0 or 12, store an hour value of 12, otherwise store
-  ;; h mod 12 as the hour value
-  (let [hr (if (= (mod h 12) 0)
-             12
-             (mod h 12))]
-    (if (> (+ h 1) 12)
-      (str hr "pm")
-      (str hr "am"))))
-
-
-;; Asgn 1.
-;;
-;; @Todo: This function should take a map in the format of
-;; the values in the `instructor-hours` map (e.g. {:start ... :end ... :location ...})
-;; and convert it to a string format.
-;;
-;; Example:
-;; (formatted-hours {:start 8 :end 10 :location "the chairs outside of the Wondry"}))
-;; "from 8am to 10am in the chairs outside of the Wondry"
-;;
-;; You should use your format-hour function to implement this.
-;;
-;; See the formatted-hours-test in test/mtgsmspricer/core_test.clj for the
-;; complete specification.
-;;
-(defn formatted-hours [hours]
-  (str "from " (format-hour (get hours :start))
-       " to " (format-hour (get hours :end))
-       " in " (get hours :location)))
-
-
-
-;; Asgn 1.
-;;
-;; @Todo: This function should lookup and see if the instructor
-;; has office hours on the day specified by the first of the `args`
-;; in the parsed message. If so, the function should return the
-;; `formatted-hours` representation of the office hours. If not,
-;; the function should return "there are no office hours on that day".
-;; The office hours for the instructor should be obtained from the
-;; `instructor-hours` map.
-;;
-;; You should use your formatted-hours function to implement this.
-;;
-;; See the office-hours-for-day-test in test/mtgsmspricer/core_test.clj for the
-;; complete specification.
-;;
-(defn office-hours [{:keys [args cmd]}]
-  (if (contains? instructor-hours (first args))
-      (formatted-hours (get instructor-hours (first args)))
-      "there are no office hours on that day"))
 
 ;; Asgn 2.
 ;;
@@ -246,224 +131,164 @@
 (defn action-remove [ks]
   (zipmap [:action :ks] [:dissoc-in ks]))
 
-;; Asgn 3.
-;;
-;; @Todo: Create a function called "experts-register"
-;; that takes the current application `state`, a `topic`
-;; the expert's `id` (e.g., unique name), and information
-;; about the expert (`info`) and registers them as an expert on
-;; the specified topic. Look at the associated test to see the
-;; expected function signature.
-;;
-;; Your function should NOT directly change the application state
-;; to register them but should instead return a list of the
-;; appropriate side-effects (above) to make the registration
-;; happen (hint: action-insert).
-;;
-;; See the integration test in See handle-message-test for the
-;; expectations on how your code operates
-;;
-(defn experts-register [experts topic id info]
-  (list (action-insert (list :expert topic id) info)))
+;; parse-response -- parses the JSON response from the Scryfall
+;; API into a clojure map object
+(defn parse-response [response]
+  (json/read-str (:body response) :key-fn keyword))
 
-;; Asgn 3.
-;;
-;; @Todo: Create a function called "experts-unregister"
-;; that takes the current application `state`, a `topic`
-;; and the expert's `id` (e.g., unique name) and then
-;; removes the expert from the list of experts on that topic.
-;; Look at the associated test to see the expected function signature.
-;;
-;; Your function should NOT directly change the application state
-;; to unregister them but should instead return a list of the
-;; appropriate side-effects (above) to make the registration
-;; happen (hint: action-remove).
-;;
-;; See the integration test in See handle-message-test for the
-;; expectations on how your code operates
-;;
-(defn experts-unregister [experts topic id]
-  (action-remove [experts topic id]))
+;; http-wrap -- wraps the http requests in a reader conditional
+;; so that it works with the java backend and the node backend
+(defn http-wrap [uri params]
+  #?(:clj (client/get uri params)
+     :cljs (go
+            (let [response (<! (jsclient/get uri params))]
+              response))))
 
-(defn experts-question-msg [experts question-words]
-  (str "Asking " (count experts) " expert(s) for an answer to: \""
-       (string/join " " question-words) "\""))
 
-;; Asgn 3.
-;;
-;; @Todo: Create a function called "ask-experts"
-;; that takes two parameters:
-;;
-;; 1. the list of experts on the topic
-;; 2. a parsed message with the format:
-;;    {:cmd "ask"
-;;     :user-id "phone number that sent the message"
-;;     :args [topic question-word1 question-word2 ... question-wordN]}
-;;
-;; The sender of the message will be identified by their phone number
-;; in the user-id parameter. This is the phone number that you will need
-;; to forward answers to the question to.
-;;
-;; The parsed message is generated by breaking up the words in the ask
-;; text message. For example, if someone sent the message:
-;;
-;; "ask food what is the best pizza in nashville"
-;;
-;; The parsed message would be:
-;;
-;; {:cmd "ask"
-;;  :user-id "+15555555555"
-;;  :args ["food" "what" "is" "the" "best" "pizza" "in" "nashville"]}
-;;
-;; This function needs to return a list with two elements:
-;; [[actions...] "response to asker"]
-;;
-;; The actions in the list are the *side effects* that need to take place
-;; to ask the question (e.g., sending messages to the experts). The string
-;; is the response that is going to be sent back to the person that asked
-;; the question (e.g. "Asking 2 expert(s) for an answer to ....").
-;;
-;; The correct string response to a valid question should be produced with
-;; the `experts-question-msg` function above.
-;;
-;; Think about how you are going to figure out where to route messages
-;; when an expert answers (see the conversations query) and make sure you
-;; handle the needed side effect for storing the conversation state.
-;;
-;; If there are no registered experts on a topic, you should return an
-;; empty list of actions and "There are no experts on that topic."
-;;
-;; If there isn't a question, you should return "You must ask a valid question."
-;;
-;; Why this strange architecture? By returning a list of the actions to take,
-;; rather than directly taking that action, we can keep this function pure.
-;; Pure functions are WAY easier to test / maintain. Also, we can isolate our
-;; messy impure action handling at the "edges" of the application, where it is
-;; easier to track and reason about.
-;;
-;; You should look at `handle-message` to get an idea of the way that this
-;; function is going to be used, its expected signature, and how the actions
-;; and output are going to work.
-;;
-;; See the integration test in See handle-message-test for the
-;; expectations on how your code operates
-;;
-(defn ask-experts [experts {:keys [args user-id]}]
-  (if (empty? experts)
-    (list [] "There are no experts on that topic.")
-    (if (empty? (rest args))
-      (list [] "You must ask a valid question.")
-      (list
-       (concat
-        (action-send-msgs experts (clojure.string/join " " (rest args)))
-        (action-inserts [:conversations] experts {:last-question (clojure.string/join " " (rest args))  :asker user-id}))
-       (experts-question-msg experts (rest args))))))
+;; set-traverse -- recursively traverses a given list of
+;; card printings in JSON format and finds the first one that
+;; has a USD price listed
+(defn set-traverse [set_list]
+  (if (empty? set_list)
+    nil
+    (if (contains? (first set_list) :usd)
+      (first set_list)
+      (set-traverse (rest set_list)))))
 
-;; Asgn 3.
-;;
-;; @Todo: Create a function called "answer-question"
-;; that takes two parameters:
-;;
-;; 1. the last conversation describing the last question that was routed
-;;    to the expert
-;; 2. a parsed message with the format:
-;;    {:cmd "ask"
-;;     :user-id "+15555555555"
-;;     :args [topic answer-word1 answer-word2 ... answer-wordN]}
-;;
-;; The parsed message is generated by breaking up the words in the ask
-;; text message. For example, if someone sent the message:
-;;
-;; "answer joey's house of pizza"
-;;
-;; The conversation will be data that you store as a side-effect in
-;; ask-experts. You probably want this data to be information about the
-;; last question asked to each expert. See the "think about" comment above.
-;;
-;; The parsed message would be:
-;;
-;; {:cmd "answer"
-;;  :user-id "+15555555555"
-;;  :args ["joey's" "house" "of" "pizza"]}
-;;
-;; This function needs to return a list with two elements:
-;; [[actions...] "response to expert answering"]
-;;
-;; The actions in the list are the *side effects* that need to take place
-;; to send the answer to the original question asker. The string
-;; is the response that is going to be sent back to the expert answering
-;; the question.
-;;
-;; Think about how you are going to figure out where to route messages
-;; when an expert answers (see the conversations query) and make sure you
-;; handle the needed side effect for storing the conversation state.
-;;
-;; Why this strange architecture? By returning a list of the actions to take,
-;; rather than directly taking that action, we can keep this function pure.
-;; Pure functions are WAY easier to test / maintain. Also, we can isolate our
-;; messy impure action handling at the "edges" of the application, where it is
-;; easier to track and reason about.
-;;
-;; You should look at `handle-message` to get an idea of the way that this
-;; function is going to be used, its expected signature, and how the actions
-;; and output are going to work.
-;;
-;; See the integration test in See handle-message-test for the
-;; expectations on how your code operates
-;;
-(defn answer-question [conversation {:keys [args]}]
-  (if (empty? conversation)
-    (list [] "You haven't been asked a question.")
-    (if (empty? args)
-      (list [] "You did not provide an answer.")
-      (list
-        (list (action-send-msg (get conversation :asker) (clojure.string/join " " args)))
-        "Your answer was sent."))))
+;; grab-proper-printing -- finds an appropriate printing
+;; of a card from Scryfall (i.e. one that has a USD price listed)
+;; Takes a parsed card name as input, and returns a map of the
+;; JSON object of the printing it finds
+(defn grab-proper-printing [name]
+  (try
+    ;; first find the list of all printings of the card
+    (let [prints_uri
+          (:prints_search_uri
+            (parse-response
+              (http-wrap "https://api.scryfall.com/cards/named"
+                {:query-params {:fuzzy [name]}})))]
+      ;; then find one with a valid USD price listed
+      (let [data_list
+            (:data
+               (parse-response
+                 (http-wrap prints_uri {:debug false})))]
+        (set-traverse data_list)))
+    (catch Exception e nil)))
 
-;; Asgn 3.
-;;
-;; @Todo: Create a function called "add-expert"
-;; that takes two parameters:
-;;
-;; 1. the current list of experts on the topic
-;; 2. a parsed message with the format:
-;;    {:cmd "expert"
-;;     :user-id "+15555555555"
-;;     :args [topic]
-;;
-;;
-;; The parsed message is generated by breaking up the words in the expert
-;; text message. For example, if someone sent the message:
-;;
-;; "expert food"
-;;
-;; The parsed message would be:
-;;
-;; {:cmd "expert"
-;;  :user-id "+15555555555"))
-;;  :args ["food"]}
-;;
-;; This function needs to add "sara" to the list of experts on "food" and
-;; associate her phone number with her ID.
-;;
-;; This function needs to return a list with two elements:
-;; [[actions...] "response to the person adding themselves as an expert"]
-;;
-;; The actions in the list are the *side effects* that need to take place
-;; to add the person as an expert on the topic (hint: result of calling experts-register). The string
-;; is the response that is going to be sent back to the person adding themselves
-;; as an expert.
-;;
-;; You should look at `handle-message` to get an idea of the way that this
-;; function is going to be used, its expected signature, and how the actions
-;; and output are going to work.
-;;
-;; See the integration test in See handle-message-test for the
-;; expectations on how your code operates
-(defn add-expert [experts {:keys [args user-id]}]
+;; format-output -- given a card object as a parsed JSON, extracts
+;; and formats the appropriate information to print for a price command
+(defn format-price-output [card-obj]
+  (str (:name card-obj) " (" (string/upper-case (:set card-obj)) "): $" (:usd card-obj)))
+
+;; price-fetch -- given a set of arguments that form
+;; a card name or roughly form a card name, responds
+;; with the price of the first available printing
+;; of the card on Scryfall that has a price in USD
+;; and the set code for the set that it is from
+(defn price-fetch [{:keys [args user-id]}]
   (list
-    (experts-register experts (first args) user-id {})
-    (str user-id " is now an expert on " (first args) ".")))
+   []
+   (let [printing
+         (grab-proper-printing
+           (string/join " " args))]
+    (if (nil? printing)
+      "Error: unknown card name"
+      (format-price-output printing)))))
+
+;; find-card-name -- given a list of cards and associated
+;; quantities, finds the first card name in the list
+(defn find-card-name [list]
+  (if (or (empty? list) (number? (read-string (first list))))
+    '()
+    (cons (first list) (find-card-name (rest list)))))
+
+;; find-rest-cards -- given a list of cards and associated
+;; quantities, finds the next card in the list that includes
+;; a quantity as well as the rest of the list
+(defn find-rest-cards [list]
+  (if (or (empty? list) (number? (read-string (first list))))
+    list
+    (find-rest-cards (rest list))))
+
+;; sum-list-parse -- recursively parses input to sum-fetch
+(defn sum-list-parse [list]
+  (if (empty? list)
+    0
+    (if (or (empty? (rest list)) (not (number? (read-string (first list)))))
+      "Error: invalid list syntax or card name"
+      ;; if the list is not empty, sum the product of the
+      ;; current quantity and price with the rest of the
+      ;; products of quantity and price
+      (let [card (find-card-name (rest list))]
+        (if (empty? card)
+          "Error: invalid list syntax or card name"
+          ;; call the Scryfall API to find the price of
+          ;; a particular printing of the card
+          (let [printing (grab-proper-printing (string/join " " card))]
+            (if (nil? printing)
+              "Error: invalid list syntax or card name"
+              ;; build a recursive sum
+              (+
+                ;; multiply the price by the desired quantity
+                (*
+                 (read-string (first list))
+                 (read-string (:usd printing)))
+                ;; sum the rest of the cards
+                (sum-list-parse (find-rest-cards (rest list)))))))))))
+
+;; sum-fetch -- given a set of arguments that form
+;; a list of numbers and associated card names, responds
+;; with the sum of the prices of the cards listed
+(defn sum-fetch [{:keys [args user-id]}]
+  (list
+   []
+   (if (empty? args)
+     "Error: invalid list syntax"
+     (let [result (sum-list-parse args)]
+       (if (string? result)
+         result
+         (str "Total price is: $" (format "%.2f" result)))))))
+
+;; abs -- helper function to find absolute value of a number
+(defn abs [n] (if (neg? n) (- n) n))
+
+;; list-split -- helper function to split a string into a vector
+;; of the components delimited by whitespace and then turn it
+;; into a list
+(defn list-split [str]
+  (apply list (string/split str #" ")))
+
+;; diff-parse -- parses the input to the diff command. Joins the
+;; arguments and splits the string into a list of 2 card list strings
+;; based on the & token.
+(defn diff-parse [arglist]
+  (map
+    #(string/trim %)
+     (apply list
+       (string/split (string/join " " arglist) #"&"))))
+
+;; diff-format -- helper function to properly format the result
+;; of the diff command.
+(defn diff-format [result]
+  (if (neg? result)
+    (str "Price difference is -$" (format "%.2f" (abs result)))
+    (str "Price difference is $" (format "%.2f" result))))
+
+;; diff-fetch -- given a set of arguments that form
+;; two lists of numbers and associated card names, responds
+;; with the difference between the two sums of the card list prices.
+(defn diff-fetch [{:keys [args user-id]}]
+  (list
+   []
+   (let [parsed-lists (diff-parse args)]
+    (if (= (count parsed-lists) 2)
+      (let [res1 (sum-list-parse (list-split (first parsed-lists)))
+            res2 (sum-list-parse (list-split (second parsed-lists)))]
+        (if (and (number? res1) (number? res2))
+          (diff-format (- res1 res2))
+          "Error: invalid list syntax or card name"))
+      "Error: invalid diff syntax"))))
+
 
 ;; Don't edit!
 (defn stateless [f]
@@ -471,21 +296,11 @@
     [[] (apply f args)]))
 
 
-(def routes {"default"  (stateless (fn [& args] "Unknown command."))
-             "welcome"  (stateless welcome)
-             "homepage" (stateless homepage)
-             "office"   (stateless office-hours)
-             "expert"   #(add-expert %1 %2)
-             "ask"      #(ask-experts %1 %2)
-             "answer"   #(answer-question %1 %2)})
-;; Asgn 3.
-;;
-;; @Todo: Add mappings of the cmds "expert", "ask", and "answer" to
-;; to the `routes` map so that the functions that you
-;; created will be invoked when the corresponding text message
-;; commands are received.
-;;})
-
+(def routes {"default"  (stateless (fn [& args] "Unknown command. Text \"help\" for commands."))
+             "help"     #(help %)
+             "price"    #(price-fetch %)
+             "sum"      #(sum-fetch %)
+             "diff"     #(diff-fetch %)})
 
 ;; Don't edit!
 (defn experts-on-topic-query [state-mgr pmsg]
@@ -512,6 +327,7 @@
     (if-let [qfn (get queries (:cmd pmsg))]
       (<! (qfn state-mgr pmsg))
       {})))
+
 
 
 ;; Asgn 1.
@@ -605,7 +421,7 @@
           _      (println "  Read state:" state)
           hdlr   (rtr pmsg)
           _      (println "  Hdlr:" hdlr)
-          [as o] (hdlr state pmsg)
+          [as o] (hdlr pmsg)
           _      (println "  Hdlr result:" [as o])
           arslt  (<! (process-actions system as))
           _      (println "  Action results:" arslt)]

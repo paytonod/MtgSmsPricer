@@ -21,7 +21,7 @@
 ;; This is an impure function that reads from standard input, so we try
 ;; to keep it as simple as possible.
 (defn prompt-for-input []
-  (print "CSx278: ")
+  (print "MtgSmsPricer: ")
   (flush)
   (read-line))
 

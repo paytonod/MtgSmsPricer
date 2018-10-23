@@ -16,3 +16,4 @@ pom.xml.asc
 .hgignore
 .hg/
 /credentials
+.serverless-secrets.json
