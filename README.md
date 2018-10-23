@@ -129,7 +129,7 @@ The commands currently available for usage are:
 
 * price [card name] -- this presents the user with the price of the given card.
 
-* sum [list of card names], where [list of card names] is of the format "X card1 Y card2 Z card3 ..." where X, Y, and Z are the quantities of card1, card2, and card3 respectively. Presents the user with the sum of the price of the quantity of the cards listed.
+* sum [list of card names] -- where [list of card names] is of the format "X card1 Y card2 Z card3 ..." and X, Y, and Z are the quantities of card1, card2, and card3 respectively. Presents the user with the sum of the price of the quantity of the cards listed.
 
-* diff [list of card names] & [list of card names], where [list of card names] is of the format "X card1 Y card2 Z card3 ..." where X, Y, and Z are the quantities of card1, card2, and card3 respectively. Presents the user with the difference in price between the two lists of cards.
+* diff [list of card names] & [list of card names] -- where [list of card names] is of the format "X card1 Y card2 Z card3 ..." and X, Y, and Z are the quantities of card1, card2, and card3 respectively. Presents the user with the difference in price between the two lists of cards.
 
