@@ -210,6 +210,13 @@
     list
     (find-rest-cards (rest list))))
 
+;; cond-add -- helper function that adds together the two arguments if they're
+;; both numbers, but returns an error message as a string if they're not
+(defn cond-add [arg1 arg2]
+  (if (and (number? arg1) (number? arg2))
+    (+ arg1 arg2)
+    "Error: invalid list syntax or card name"))
+
 ;; sum-list-parse -- recursively parses input to sum-fetch
 (defn sum-list-parse [list]
   (if (empty? list)
@@ -228,7 +235,7 @@
             (if (nil? printing)
               "Error: invalid list syntax or card name"
               ;; build a recursive sum
-              (+
+              (cond-add
                 ;; multiply the price by the desired quantity
                 (*
                  (read-string (first list))
@@ -247,7 +254,7 @@
      (let [result (sum-list-parse args)]
        (if (string? result)
          result
-         (str "Total price is: $" (format "%.2f" result)))))))
+         (str "Total price: $" (format "%.2f" result)))))))
 
 ;; abs -- helper function to find absolute value of a number
 (defn abs [n] (if (neg? n) (- n) n))
@@ -271,8 +278,8 @@
 ;; of the diff command.
 (defn diff-format [result]
   (if (neg? result)
-    (str "Price difference is -$" (format "%.2f" (abs result)))
-    (str "Price difference is $" (format "%.2f" result))))
+    (str "Price difference: -$" (format "%.2f" (abs result)))
+    (str "Price difference: $" (format "%.2f" result))))
 
 ;; diff-fetch -- given a set of arguments that form
 ;; two lists of numbers and associated card names, responds
